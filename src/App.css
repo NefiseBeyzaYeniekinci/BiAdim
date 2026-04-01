@@ -1,10 +1,22 @@
 /* App Layout Specifics (Main structural wrapper) */
+.app-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
 .app-container {
   width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+}
+
+.main-content {
+  flex: 1;
 }
 
 main {

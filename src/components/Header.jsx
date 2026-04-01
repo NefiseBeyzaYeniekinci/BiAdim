@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './Header.css';
 
 const Header = () => {
@@ -15,20 +16,21 @@ const Header = () => {
   return (
     <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="container header-container">
-        <a href="/" className="header-logo">
+        <Link to="/" className="header-logo">
           Bi<span className="header-accent">Adım</span>
-        </a>
+        </Link>
         
         <nav className="header-nav">
-          <a href="#features" className="header-link">Özellikler</a>
-          <a href="#mentors" className="header-link">Mentörler</a>
-          <a href="#sponsors" className="header-link">Sponsor Bul</a>
-          <a href="#ai" className="header-link">AI Danışman</a>
+          <Link to="/" className="header-link">Ana Sayfa</Link>
+          <Link to="/mentors" className="header-link">Mentörler</Link>
+          <Link to="/sponsors" className="header-link">Sponsor Bul</Link>
+          {/* AI Page is mapped to home features for now */}
+          <Link to="/#features" className="header-link">AI Danışman</Link> 
         </nav>
 
         <div className="header-actions">
-          <a href="#login" className="btn btn-outline">Giriş Yap</a>
-          <a href="#signup" className="btn btn-primary">Ücretsiz Başla</a>
+          <Link to="/auth?mode=login" className="btn btn-outline">Giriş Yap</Link>
+          <Link to="/auth?mode=signup" className="btn btn-primary">Ücretsiz Başla</Link>
         </div>
       </div>
     </header>
