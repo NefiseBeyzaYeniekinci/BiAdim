@@ -1,72 +1,134 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import { doc, getDoc, setDoc, onSnapshot, collection, addDoc, getDocs, query, orderBy, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const UserProfileContext = createContext(null);
 
 /**
- * Kullanıcı profilini localStorage'da tutar.
- * Yapı: { role, projectName, sector, stage, bio, expertise, linkedin, twitter, website, score }
+ * Kullanıcı profilini ve içeriklerini Firestore'da tutar.
  */
 export const UserProfileProvider = ({ children }) => {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
-  // Kullanıcı değişince profili yükle
+  // Kullanıcı değişince profili yükle (Real-time dinle)
   useEffect(() => {
-    if (!user) { setProfile(null); return; }
-    const stored = localStorage.getItem(`profile_${user.uid}`);
-    if (stored) {
-      setProfile(JSON.parse(stored));
-    } else {
-      setProfile({ role: null });
+    if (!user) { 
+      setProfile(null); 
+      setLoadingProfile(false);
+      return; 
     }
+
+    const userRef = doc(db, 'users', user.uid);
+    
+    // Gerçek zamanlı okuma (onSnapshot)
+    const unsubscribe = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setProfile(docSnap.data());
+      } else {
+        // İlk kez giren kullanıcı için geçici veya boş kayıt 
+        // Asıl role seçimi yapıldığında saveProfile üzerinden oluşturulacak
+        setProfile({ role: null, score: 0 });
+      }
+      setLoadingProfile(false);
+    }, (error) => {
+      console.error("Profil okunurken hata oluştu:", error);
+      setLoadingProfile(false);
+    });
+
+    return () => unsubscribe();
   }, [user]);
 
-  const saveProfile = (updates) => {
+  const saveProfile = async (updates) => {
     if (!user) return;
-    const next = { ...profile, ...updates };
-    localStorage.setItem(`profile_${user.uid}`, JSON.stringify(next));
-    setProfile(next);
+    const userRef = doc(db, 'users', user.uid);
+    try {
+      await setDoc(userRef, updates, { merge: true });
+    } catch (error) {
+      console.error("Profil güncellenemedi:", error);
+    }
   };
 
   // Blog yazısı kaydet (mentöre özel)
-  const saveBlogPost = (post) => {
+  const saveBlogPost = async (post) => {
     if (!user) return null;
-    const key = 'blog_posts';
-    const existing = JSON.parse(localStorage.getItem(key) || '[]');
-    const newPost = {
-      id: Date.now(),
-      authorId: user.uid,
-      authorName: user.displayName || 'Mentör',
-      authorPhoto: user.photoURL || null,
-      createdAt: new Date().toISOString(),
-      ...post,
-    };
-    localStorage.setItem(key, JSON.stringify([newPost, ...existing]));
-    // Her yazı = 10 puan
-    saveProfile({ score: (profile?.score || 0) + 10 });
-    return newPost;
+    try {
+      const newPost = {
+        authorId: user.uid,
+        authorName: user.displayName || 'Mentör',
+        authorPhoto: user.photoURL || null,
+        createdAt: new Date().toISOString(),
+        ...post,
+      };
+      const docRef = await addDoc(collection(db, 'blogs'), newPost);
+      
+      // Her yazı = 10 puan, Firestore'da artır
+      const currentScore = profile?.score || 0;
+      await saveProfile({ score: currentScore + 10 });
+      
+      return { id: docRef.id, ...newPost };
+    } catch (error) {
+      console.error("Blog kaydedilemedi:", error);
+      return null;
+    }
   };
 
-  // Tüm blog yazılarını getir (statik + kullanıcı yazıları)
-  const getUserBlogPosts = () => {
-    return JSON.parse(localStorage.getItem('blog_posts') || '[]');
+  // Tüm blog yazılarını getir (Asenkron)
+  const getUserBlogPosts = async () => {
+    try {
+      const blogsRef = collection(db, 'blogs');
+      const q = query(blogsRef, orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      const blogs = [];
+      snapshot.forEach(doc => {
+        blogs.push({ id: doc.id, ...doc.data() });
+      });
+      return blogs;
+    } catch (error) {
+      console.error("Bloglar çekilemedi:", error);
+      return [];
+    }
   };
 
   // Girişimci mentör seçince mentörün puanı artar
-  const guidedByMentor = (mentorId) => {
-    const key = `mentor_score_${mentorId}`;
-    const current = parseInt(localStorage.getItem(key) || '0');
-    localStorage.setItem(key, current + 25);
+  const guidedByMentor = async (mentorId) => {
+    try {
+      const mentorRef = doc(db, 'mentors', mentorId); 
+      // Not: Eğer mentor 'users' tablosundaysa 'users' koleksiyonunu hedeflemelisiniz
+      // Ancak henüz mentorlar ayrı bir kolleksiyonda (veya statik veriden geldiği için) 
+      // Firestore'da güncellerken dikkatli olmalıyız.
+      const mentorSnap = await getDoc(mentorRef);
+      if (mentorSnap.exists()) {
+        const currentData = mentorSnap.data();
+        await updateDoc(mentorRef, {
+          score: (currentData.score || 0) + 25
+        });
+      }
+    } catch (error) {
+      console.error("Mentör puanı güncellenemedi:", error);
+    }
   };
 
-  const getMentorScore = (mentorId) => {
-    return parseInt(localStorage.getItem(`mentor_score_${mentorId}`) || '0');
+  const getMentorScore = async (mentorId) => {
+    try {
+      const mentorRef = doc(db, 'mentors', mentorId);
+      const mentorSnap = await getDoc(mentorRef);
+      if (mentorSnap.exists()) {
+        return mentorSnap.data().score || 0;
+      }
+      return 0;
+    } catch (error) {
+      console.error("Mentör puanı alınamadı:", error);
+      return 0;
+    }
   };
 
   return (
     <UserProfileContext.Provider value={{
       profile,
+      loadingProfile,
       saveProfile,
       saveBlogPost,
       getUserBlogPosts,

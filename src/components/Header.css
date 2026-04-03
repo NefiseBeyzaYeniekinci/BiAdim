@@ -289,9 +289,89 @@
   gap: 1rem;
 }
 
+/* ── Notifications ── */
+.notif-btn {
+  background: transparent;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-main);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.notif-btn:hover { background: rgba(99,102,241,0.08); color: var(--color-primary); }
+
+.notif-btn svg { width: 22px; height: 22px; }
+
+.notif-badge {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: #EF4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.header.scrolled .notif-badge { border-color: rgba(255,255,255,0.9); }
+
+.notif-dropdown {
+  position: absolute;
+  top: 55px;
+  right: -20px;
+  width: 320px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px -5px rgba(0,0,0,0.15);
+  border: 1px solid rgba(0,0,0,0.05);
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.notif-header {
+  padding: 1rem 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  border-bottom: 1px solid #E2E8F0;
+  background: #F8FAFC;
+}
+
+.notif-list { display: flex; flex-direction: column; max-height: 350px; overflow-y: auto; }
+
+.notif-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-bottom: 1px solid #F1F5F9;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.notif-item:hover { background: #F8FAFC; }
+
+.notif-item.unread { background: rgba(99,102,241,0.03); }
+.notif-item.unread:hover { background: rgba(99,102,241,0.06); }
+
+.notif-icon { font-size: 1.5rem; }
+
+.notif-content p { margin: 0 0 0.25rem; font-size: 0.85rem; color: var(--color-text-main); line-height: 1.4; font-weight: 500; }
+.notif-time { font-size: 0.75rem; color: #94A3B8; font-weight: 600; }
+
 /* Responsive */
 @media (max-width: 768px) {
-  .header-nav {
-    display: none; /* simple mobile hide for now */
-  }
+  .header-nav { display: none; }
+  .notif-dropdown { right: -60px; width: 300px; }
 }

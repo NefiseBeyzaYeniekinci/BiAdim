@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import './Auth.css';
@@ -11,7 +11,10 @@ const Auth = () => {
   const { user } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleError, setGoogleError] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
+  
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
 
   // Zaten giriş yapmışsa ana sayfaya yönlendir
   useEffect(() => {
@@ -20,31 +23,52 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
-  // Parse mode from URL query e.g. /auth?mode=signup
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (params.get('mode') === 'signup') {
-      setIsLogin(false);
-    } else {
-      setIsLogin(true);
-    }
+    if (params.get('mode') === 'signup') setIsLogin(false);
+    else setIsLogin(true);
   }, [location]);
+
+  const handleInputChange = (e) => {
+    setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
+  };
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
-    setGoogleError('');
+    setAuthError('');
     try {
       await signInWithPopup(auth, googleProvider);
-      // Başarılı giriş → useEffect user değişimini yakalar ve yönlendirir
     } catch (err) {
-      console.error('Google giriş hatası:', err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        setGoogleError('Giriş penceresi kapatıldı. Tekrar dene.');
-      } else {
-        setGoogleError('Google ile giriş yapılamadı. Lütfen tekrar dene.');
-      }
+      if (err.code === 'auth/popup-closed-by-user') setAuthError('Giriş penceresi kapatıldı.');
+      else setAuthError('Google ile giriş yapılamadı.');
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
+    setEmailLoading(true);
+    setAuthError('');
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      } else {
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        if (userCredential.user) {
+          await updateProfile(userCredential.user, { displayName: formData.name });
+          // Force reload or just let the observer catch the new state. 
+          // Re-triggering user state visually isn't strictly necessary since user profile is fetched on reload, but we can window.location.reload() or rely on context
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      if (err.code === 'auth/email-already-in-use') setAuthError('Bu e-posta kullanımda.');
+      else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') setAuthError('E-posta veya şifre hatalı.');
+      else if (err.code === 'auth/weak-password') setAuthError('Şifre en az 6 karakter olmalı.');
+      else setAuthError('Hata oluştu: ' + err.message);
+    } finally {
+      setEmailLoading(false);
     }
   };
 
@@ -99,9 +123,7 @@ const Auth = () => {
             <span>{googleLoading ? 'Giriş yapılıyor...' : 'Google ile devam et'}</span>
           </button>
 
-          {googleError && (
-            <p className="auth-error">{googleError}</p>
-          )}
+          {authError && <p className="auth-error">{authError}</p>}
         </div>
 
         {/* Ayırıcı */}
@@ -110,26 +132,26 @@ const Auth = () => {
         </div>
 
         {/* E-posta Formu */}
-        <form onSubmit={(e) => { e.preventDefault(); alert('Veritabanı bağlantısı kapalı, deneme formu!'); }}>
+        <form onSubmit={handleEmailSubmit}>
           {!isLogin && (
             <div className="form-group fade-in-up delay-1">
               <label className="form-label" htmlFor="name">Ad Soyad</label>
-              <input type="text" id="name" className="form-input" placeholder="Elon Musk" required />
+              <input type="text" id="name" className="form-input" placeholder="Elon Musk" required value={formData.name} onChange={handleInputChange} />
             </div>
           )}
 
           <div className="form-group fade-in-up delay-1">
             <label className="form-label" htmlFor="email">E-posta Adresi</label>
-            <input type="email" id="email" className="form-input" placeholder="mail@example.com" required />
+            <input type="email" id="email" className="form-input" placeholder="mail@example.com" required value={formData.email} onChange={handleInputChange} />
           </div>
 
           <div className="form-group fade-in-up delay-2">
             <label className="form-label" htmlFor="password">Şifre</label>
-            <input type="password" id="password" className="form-input" placeholder="••••••••" required />
+            <input type="password" id="password" className="form-input" placeholder="••••••••" required minLength="6" value={formData.password} onChange={handleInputChange} />
           </div>
 
-          <button type="submit" className="btn btn-primary auth-submit fade-in-up delay-3">
-            {isLogin ? 'Giriş Yap' : 'Hesabımı Oluştur'}
+          <button type="submit" className="btn btn-primary auth-submit fade-in-up delay-3" disabled={emailLoading}>
+            {emailLoading ? 'İşleniyor...' : (isLogin ? 'Giriş Yap' : 'Hesabımı Oluştur')}
           </button>
         </form>
       </div>

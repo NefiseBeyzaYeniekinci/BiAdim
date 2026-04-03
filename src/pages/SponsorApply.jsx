@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUserProfile } from '../context/UserProfileContext';
 import { MOCK_SPONSORS, SECTORS, STAGES, SUPPORT_TYPES } from '../data/sponsors';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 import './SponsorApply.css';
 
 const STEPS = ['Proje Bilgileri', 'Vizyon & Fikir', 'Destek Talebi', 'Önizleme'];
@@ -15,6 +17,7 @@ const SponsorApply = () => {
 
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const sponsor = MOCK_SPONSORS.find(s => s.id === parseInt(id));
 
@@ -49,6 +52,27 @@ const SponsorApply = () => {
   }
 
   const handleChange = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'applications'), {
+        ...form,
+        sponsorId: sponsor.id,
+        sponsorName: sponsor.name,
+        userId: user?.uid || 'guest',
+        status: 'pending', // pending, approved, rejected
+        note: 'Başvurunuz inceleme komitesine iletilmiştir.',
+        createdAt: serverTimestamp()
+      });
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Başvuru gönderilirken hata oluştu:", error);
+      alert("Hata oluştu. Tekrar deneyiniz.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="sp-apply-page">
@@ -211,7 +235,9 @@ const SponsorApply = () => {
                 <div style={{ flex: 1 }} />
                 {step < 3
                   ? <button className="btn btn-primary" onClick={() => setStep(s => s + 1)} id="next-step-btn">Devam →</button>
-                  : <button className="btn btn-primary" onClick={() => setSubmitted(true)} id="submit-application-btn">🚀 Başvuruyu Gönder</button>
+                  : <button className="btn btn-primary" onClick={handleSubmit} disabled={isSubmitting} id="submit-application-btn">
+                      {isSubmitting ? 'Geliştiriliyor...' : '🚀 Başvuruyu Gönder'}
+                    </button>
                 }
               </div>
             </>

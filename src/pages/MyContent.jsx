@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUserProfile } from '../context/UserProfileContext';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import './MyContent.css';
 
 const MyContent = () => {
@@ -26,16 +28,30 @@ const MyContent = () => {
     );
   }
 
-  const allPosts = getUserBlogPosts().filter(p => p.authorId === user?.uid && !deletedIds.includes(p.id));
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleDelete = (id) => {
-    // LocalStorage'dan sil
-    const key = 'blog_posts';
-    const existing = JSON.parse(localStorage.getItem(key) || '[]');
-    const updated = existing.filter(p => p.id !== id);
-    localStorage.setItem(key, JSON.stringify(updated));
-    setDeletedIds(prev => [...prev, id]);
-    setConfirmId(null);
+  // Firestore'dan blog yazilarini al
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (!user) return;
+      const all = await getUserBlogPosts();
+      setPosts(all.filter(p => p.authorId === user.uid));
+      setLoading(false);
+    };
+    fetchPosts();
+  }, [user, getUserBlogPosts]);
+
+  const allPosts = posts.filter(p => !deletedIds.includes(p.id));
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'blogs', id));
+      setDeletedIds(prev => [...prev, id]);
+      setConfirmId(null);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const formatDate = (d) => new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });

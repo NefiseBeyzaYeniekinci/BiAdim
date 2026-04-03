@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserProfile } from '../context/UserProfileContext';
 import { MENTORS_DATA } from '../data/mentors.js';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 import './Mentors.css';
 
 /* ── Score Bar ── */
@@ -14,7 +16,6 @@ const ScoreBar = ({ score, max }) => {
   );
 };
 
-/* ── Star Rating ── */
 const Stars = ({ rating }) => (
   <span className="mentor-stars">
     {'★'.repeat(Math.floor(rating))}{'☆'.repeat(5 - Math.floor(rating))}
@@ -22,18 +23,36 @@ const Stars = ({ rating }) => (
   </span>
 );
 
+const EXPERTISE_CATEGORIES = ['Yazılım', 'Pazarlama', 'Finans', 'UX/UI', 'Hukuk', 'Teknoloji', 'Sistem Mimarisi', 'Büyüme', 'Yatırım Ağı', 'İnsan Kaynakları'];
+
 const Mentors = () => {
   const { getMentorScore } = useUserProfile();
   const navigate = useNavigate();
 
-  const mentorsWithScore = MENTORS_DATA.map(m => ({
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCat, setFilterCat] = useState('');
+  const [mentorsData, setMentorsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setMentorsData(MENTORS_DATA);
+    setLoading(false);
+  }, []);
+
+  const mentorsWithScore = mentorsData.map(m => ({
     ...m,
-    totalScore: m.baseScore + getMentorScore(m.id),
+    totalScore: m.baseScore + (m.score || 0),
   })).sort((a, b) => b.totalScore - a.totalScore);
 
-  const maxScore = mentorsWithScore[0]?.totalScore || 1;
+  const filteredMentors = mentorsWithScore.filter(m => {
+    const matchSearch = m.name.toLowerCase().includes(searchTerm.toLowerCase()) || m.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchCat = filterCat === '' || m.tags.includes(filterCat) || m.expertise.some(e => e.includes(filterCat));
+    return matchSearch && matchCat;
+  });
 
+  const maxScore = mentorsWithScore[0]?.totalScore || 1;
   const top3 = mentorsWithScore.slice(0, 3);
+  const isFiltering = searchTerm !== '' || filterCat !== '';
 
   return (
     <div className="mentors-page">
@@ -49,7 +68,29 @@ const Mentors = () => {
           </p>
         </div>
 
-        {/* ── Leaderboard Podium ── */}
+        {/* ── Search & Filter Bar ── */}
+        <div className="filter-bar fade-in-up delay-1" style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+          <input 
+            type="text" 
+            placeholder="Mentör adı veya ünvanı ara..." 
+            className="form-input" 
+            style={{ flex: 2 }}
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+          <select 
+            className="form-input form-select" 
+            style={{ flex: 1 }}
+            value={filterCat}
+            onChange={e => setFilterCat(e.target.value)}
+          >
+            <option value="">Tüm Uzmanlıklar</option>
+            {EXPERTISE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+        </div>
+
+        {/* ── Leaderboard Podium (Sadece filtre yokken göster) ── */}
+        {!isFiltering && (
         <div className="leaderboard-section fade-in-up delay-1">
           <div className="lb-header">
             <span className="lb-trophy">🏆</span>
@@ -112,10 +153,17 @@ const Mentors = () => {
             ))}
           </div>
         </div>
+        )}
 
         {/* ── All Mentor Cards ── */}
         <div className="mentor-grid">
-          {mentorsWithScore.map((mentor, index) => (
+          {loading ? (
+             <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '3rem' }}>Yükleniyor...</div>
+          ) : filteredMentors.length === 0 ? (
+            <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '3rem', color: 'var(--color-text-muted)' }}>
+              Arama kriterlerinize uyan mentör bulunamadı.
+            </div>
+          ) : filteredMentors.map((mentor, index) => (
             <div
               key={mentor.id}
               className={`mentor-card fade-in-up delay-${(index % 4) + 1}`}

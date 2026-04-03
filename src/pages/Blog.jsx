@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUserProfile } from '../context/UserProfileContext';
@@ -13,8 +13,19 @@ const Blog = () => {
 
   const isMentor = profile?.role === 'mentor';
 
+  const [userPosts, setUserPosts] = useState([]);
+
+  useEffect(() => {
+    // Statik haberlere dönüldü, ancak Firebase'den gelen kullanıcı postları da asenkron olarak çözümleniyor (opsiyonel)
+    getUserBlogPosts().then(posts => {
+      setUserPosts(posts || []);
+    }).catch(e => {
+      console.error(e);
+      setUserPosts([]);
+    });
+  }, []);
+
   // Kullanıcı yazıları + statik haberler
-  const userPosts = getUserBlogPosts();
   const allNews = [
     ...userPosts.map(p => ({ ...p, isUserPost: true })),
     ...newsData,

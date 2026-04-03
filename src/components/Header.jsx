@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUserProfile } from '../context/UserProfileContext';
 import './Header.css';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { profile } = useUserProfile();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
@@ -49,13 +52,44 @@ const Header = () => {
 
         <div className="header-actions">
           {user ? (
-            <div className="user-menu" ref={dropdownRef}>
-              <button
-                className="user-avatar-btn"
-                onClick={() => setMenuOpen((prev) => !prev)}
-                id="user-avatar-btn"
-                aria-label="Kullanıcı menüsü"
-              >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              {/* ── Bildirimler ── */}
+              <div className="notif-wrapper" style={{ position: 'relative' }}>
+                <button className="notif-btn" onClick={() => { setNotifOpen(!notifOpen); setMenuOpen(false); }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                  <span className="notif-badge">2</span>
+                </button>
+                {notifOpen && (
+                  <div className="notif-dropdown fade-in-up">
+                    <div className="notif-header">Bildirimler</div>
+                    <div className="notif-list">
+                      <div className="notif-item unread">
+                        <span className="notif-icon">🌟</span>
+                        <div className="notif-content">
+                          <p>Tebrikler! İlk blog yazınız yayınlandı.</p>
+                          <span className="notif-time">2 saat önce</span>
+                        </div>
+                      </div>
+                      <div className="notif-item">
+                        <span className="notif-icon">🎯</span>
+                        <div className="notif-content">
+                          <p>Mustafa Yılmaz semineri için hatırlatma.</p>
+                          <span className="notif-time">1 gün önce</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── User Menu ── */}
+              <div className="user-menu" ref={dropdownRef}>
+                <button
+                  className="user-avatar-btn"
+                  onClick={() => { setMenuOpen(!menuOpen); setNotifOpen(false); }}
+                  id="user-avatar-btn"
+                  aria-label="Kullanıcı menüsü"
+                >
                 {user.photoURL ? (
                   <img src={user.photoURL} alt={user.displayName} className="user-avatar-img" referrerPolicy="no-referrer" />
                 ) : (
@@ -89,6 +123,12 @@ const Header = () => {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                     İçerik Panelim
                   </Link>
+                  {profile?.role === 'girisimci' && (
+                    <Link to="/my-applications" className="dropdown-item" onClick={() => setMenuOpen(false)}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                      Başvurularım
+                    </Link>
+                  )}
                   <Link to="/profile" className="dropdown-item" onClick={() => setMenuOpen(false)} id="profile-link">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     Profilim
@@ -104,6 +144,7 @@ const Header = () => {
                   </button>
                 </div>
               )}
+            </div>
             </div>
           ) : (
             <>

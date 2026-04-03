@@ -15,6 +15,11 @@ import Settings from './pages/Settings';
 import Blog from './pages/Blog';
 import WriteBlog from './pages/WriteBlog';
 import MyContent from './pages/MyContent';
+import MyApplications from './pages/MyApplications';
+import AdminDashboard from './pages/AdminDashboard';
+import NotFound from './pages/NotFound';
+import OnboardingModal from './components/OnboardingModal';
+import Footer from './components/Footer';
 import './App.css';
 
 function App() {
@@ -22,6 +27,7 @@ function App() {
     <AuthProvider>
       <UserProfileProvider>
       <div className="app-wrapper">
+        <OnboardingModal />
         <Header />
         <div className="main-content">
           <Routes>
@@ -41,18 +47,22 @@ function App() {
             <Route path="/my-content" element={
               <ProtectedRoute><MyContent /></ProtectedRoute>
             } />
+            <Route path="/my-applications" element={
+              <ProtectedRoute><MyApplications /></ProtectedRoute>
+            } />
             <Route path="/profile" element={
               <ProtectedRoute><Profile /></ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute><AdminDashboard /></ProtectedRoute>
             } />
             <Route path="/settings" element={
               <ProtectedRoute><Settings /></ProtectedRoute>
             } />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
-
-        <footer style={{ padding: '3rem 0', textAlign: 'center', color: 'var(--color-text-muted)', borderTop: '1px solid var(--glass-border)' }}>
-          <p>&copy; {new Date().getFullYear()} Bi Girişimim Var! (BiAdım). Tüm hakları saklıdır.</p>
-        </footer>
+        <Footer />
       </div>
       </UserProfileProvider>
     </AuthProvider>

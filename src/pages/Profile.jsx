@@ -41,17 +41,6 @@ const Profile = () => {
     setSaved(false);
   };
 
-  const handleRoleSelect = (role) => {
-    if (profile?.role) {
-      alert('Güvenlik gereği, kayıtlı rolünüzü sonradan değiştiremezsiniz.');
-      return;
-    }
-    setSelectedRole(role);
-    setSaved(false);
-  };
-
-  const isRoleLocked = !!profile?.role;
-
   const handleSave = (e) => {
     e.preventDefault();
     saveProfile({ ...form, role: selectedRole });
@@ -95,41 +84,28 @@ const Profile = () => {
 
         <form className="profile-form fade-in-up delay-1" onSubmit={handleSave}>
 
-          {/* ── Rol Seçimi ── */}
+          {/* ── Gelecek Seminerlerim ── */}
           <div className="profile-section">
             <h2 className="section-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              Platforma Katılım Rolü
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Gelecek Seminerlerim
             </h2>
-            <p className="section-desc">
-              {isRoleLocked 
-                ? 'Rolünüz belirlenmiştir. Tekrar değiştirilemez.' 
-                : 'Platforma nasıl katkı sağlamak istiyorsun? (Seçiminiz daha sonra değiştirilemez)'}
-            </p>
-            <div className={`role-cards ${isRoleLocked ? 'locked' : ''}`}>
-              <button
-                type="button"
-                className={`role-card ${selectedRole === 'mentor' ? 'active' : ''} ${isRoleLocked && selectedRole !== 'mentor' ? 'disabled' : ''}`}
-                onClick={() => handleRoleSelect('mentor')}
-                id="role-mentor-btn"
-              >
-                <span className="role-emoji">🎓</span>
-                <span className="role-label">Mentör</span>
-                <span className="role-desc">Deneyimlerimi paylaşır, girişimcilere yol gösteririm</span>
-                {selectedRole === 'mentor' && <span className="role-check">✓</span>}
-              </button>
-              <button
-                type="button"
-                className={`role-card ${selectedRole === 'girisimci' ? 'active' : ''} ${isRoleLocked && selectedRole !== 'girisimci' ? 'disabled' : ''}`}
-                onClick={() => handleRoleSelect('girisimci')}
-                id="role-entrepreneur-btn"
-              >
-                <span className="role-emoji">🚀</span>
-                <span className="role-label">Girişimci</span>
-                <span className="role-desc">Girişimimi büyütmek için mentör ve sponsor arıyorum</span>
-                {selectedRole === 'girisimci' && <span className="role-check">✓</span>}
-              </button>
+            <div className="profile-seminars-list">
+              <div className="profile-seminar-item">
+                <div className="ps-date">
+                  <span className="ps-day">15</span>
+                  <span className="ps-month">Nis</span>
+                </div>
+                <div className="ps-info">
+                  <h4>Yatırımcıyı Şaşırtan Pitch Deck</h4>
+                  <p>Mustafa Yılmaz · 19:00 - Online</p>
+                </div>
+                <span className="ps-status">Kayıtlı</span>
+              </div>
             </div>
+            <p className="section-desc" style={{marginTop: '1rem'}}>
+              * Yaklaşan seminerlerinize başlamadan 15 dakika önce katılım linki e-posta adresinize gönderilir.
+            </p>
           </div>
 
           {/* ── Mentör Bilgileri ── */}

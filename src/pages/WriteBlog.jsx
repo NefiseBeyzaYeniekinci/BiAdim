@@ -64,23 +64,23 @@ const WriteBlog = () => {
   const wordCount = form.content.split(/\s+/).filter(Boolean).length;
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
-  const handlePublish = (e) => {
+  const handlePublish = async (e) => {
     e.preventDefault();
     if (!form.title.trim() || !form.content.trim()) return;
     setSaving(true);
-    setTimeout(() => {
-      saveBlogPost({
-        ...form,
-        image: form.imageUrl || `https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&q=80`,
-        readTime: `${readTime} dk`,
-        sourceName: user?.displayName || 'Mentör',
-        source: '#',
-        date: new Date().toISOString().split('T')[0],
-        isUserPost: true,
-      });
-      setSaving(false);
-      navigate('/my-content');
-    }, 600);
+    
+    await saveBlogPost({
+      ...form,
+      image: form.imageUrl || `https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600&q=80`,
+      readTime: `${readTime} dk`,
+      sourceName: user?.displayName || 'Mentör',
+      source: '#',
+      date: new Date().toISOString().split('T')[0],
+      isUserPost: true,
+    });
+    
+    setSaving(false);
+    navigate('/my-content');
   };
 
   return (
