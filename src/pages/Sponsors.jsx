@@ -1,105 +1,93 @@
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { MOCK_SPONSORS } from '../data/sponsors';
 import './Sponsors.css';
 
-const MOCK_SPONSORS = [
-  {
-    id: 1,
-    name: 'TechVision Fund',
-    type: 'Melek Yatırımcı',
-    budget: '100K ₺ - 500K ₺',
-    sector: 'Yazılım & SaaS',
-    portfolio: 12,
-    logo: '🦋'
-  },
-  {
-    id: 2,
-    name: 'Anadolu Girişim',
-    type: 'Risk Sermayesi (VC)',
-    budget: '500K ₺ - 2M ₺',
-    sector: 'E-Ticaret & Lojistik',
-    portfolio: 27,
-    logo: '🦅'
-  },
-  {
-    id: 3,
-    name: 'GreenSpark Capital',
-    type: 'Kurumsal Yatırımcı',
-    budget: '1M ₺ - 5M ₺',
-    sector: 'Temiz Enerji & Sürdürülebilirlik',
-    portfolio: 8,
-    logo: '🌱'
-  },
-  {
-    id: 4,
-    name: 'İnovasyon Merkezi',
-    type: 'Kamu Destekli Fon',
-    budget: '50K ₺ - 250K ₺',
-    sector: 'Tüm Sektörler',
-    portfolio: 45,
-    logo: '🏛️'
-  },
-  {
-    id: 5,
-    name: 'Bosphorus Ventures',
-    type: 'Risk Sermayesi (VC)',
-    budget: '2M ₺ - 10M ₺',
-    sector: 'Fintech & Blockchain',
-    portfolio: 18,
-    logo: '⚡'
-  },
-  {
-    id: 6,
-    name: 'Akıllı Şehir Fonu',
-    type: 'Tematik Yatırımcı',
-    budget: '200K ₺ - 1M ₺',
-    sector: 'Smart City & IoT',
-    portfolio: 11,
-    logo: '🏙️'
-  }
-];
+const typeColors = {
+  'Melek Yatırımcı': '#6366f1',
+  'Risk Sermayesi (VC)': '#8b5cf6',
+  'Kurumsal Yatırımcı': '#06b6d4',
+  'Kamu Destekli Fon': '#22c55e',
+  'Tematik Yatırımcı': '#f59e0b',
+};
 
 const Sponsors = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [filterSector, setFilterSector] = useState('Tümü');
+
+  const filteredSponsors = filterSector === 'Tümü'
+    ? MOCK_SPONSORS
+    : MOCK_SPONSORS.filter(s => s.sectors.some(sec => sec.toLowerCase().includes(filterSector.toLowerCase())));
+
+  const allSectors = ['Tümü', ...Array.from(new Set(MOCK_SPONSORS.flatMap(s => s.sectors)))];
+
+  const handleSponsorClick = (id) => {
+    if (!user) { navigate('/auth?mode=login'); return; }
+    navigate(`/sponsor-apply/${id}`);
+  };
+
   return (
     <div className="sponsors-page">
-      <div className="container">
+      <div className="sponsors-bg" />
+      <div className="container sponsors-container">
+
+        {/* ── Header ── */}
         <div className="page-header fade-in-up">
-          <h1 className="page-title">Sponsor & Yatırımcı Havuzu</h1>
+          <div className="sp-header-badge">💼 Yatırımcı Havuzu</div>
+          <h1 className="page-title">Sponsor & Yatırımcı Bul</h1>
           <p className="page-subtitle">
-            Girişiminiz için uygun yatırımcıyı bulun. 50K ₺'den 10M ₺'ye kadar geniş bir fon yelpazesi sizi bekliyor.
+            Girişiminiz için doğru yatırımcıyı keşfedin. Projenizi, vizyonunuzu ve destek talebinizi doğrudan iletebilirsiniz.
           </p>
         </div>
 
+        {/* ── Sector Filter ── */}
+        <div className="sp-filters fade-in-up delay-1">
+          {allSectors.map(s => (
+            <button key={s} className={`filter-btn ${filterSector === s ? 'active' : ''}`} onClick={() => setFilterSector(s)}>{s}</button>
+          ))}
+        </div>
+
+        {/* ── Sponsor Grid ── */}
         <div className="sponsors-grid">
-          {MOCK_SPONSORS.map((sponsor, index) => (
+          {filteredSponsors.map((sponsor, index) => (
             <div className={`sponsor-card fade-in-up delay-${(index % 3) + 1}`} key={sponsor.id}>
               <div className="sponsor-header">
                 <div className="sponsor-logo">{sponsor.logo}</div>
                 <div className="sponsor-info">
                   <h3 className="sponsor-name">{sponsor.name}</h3>
-                  <p className="sponsor-type">{sponsor.type}</p>
+                  <span className="sponsor-type-badge" style={{ background: typeColors[sponsor.type] + '15', color: typeColors[sponsor.type], borderColor: typeColors[sponsor.type] + '33' }}>
+                    {sponsor.type}
+                  </span>
                 </div>
               </div>
+
+              <p className="sponsor-focus">{sponsor.focus}</p>
 
               <div className="sponsor-meta">
                 <div className="meta-row">
-                  <span className="meta-label">Bütçe Aralığı</span>
+                  <span className="meta-label">💰 Bütçe</span>
                   <span className="meta-value">{sponsor.budget}</span>
                 </div>
                 <div className="meta-row">
-                  <span className="meta-label">Sektör Odağı</span>
-                  <span className="meta-value">{sponsor.sector}</span>
+                  <span className="meta-label">📊 Min. Aşama</span>
+                  <span className="meta-value">{sponsor.minStage}</span>
                 </div>
                 <div className="meta-row">
-                  <span className="meta-label">Portföy Büyüklüğü</span>
+                  <span className="meta-label">💼 Portföy</span>
                   <span className="meta-value">{sponsor.portfolio} Girişim</span>
+                </div>
+                <div className="meta-row">
+                  <span className="meta-label">🏷️ Sektörler</span>
+                  <div className="sector-tags">
+                    {sponsor.sectors.map(s => <span key={s} className="sector-tag">{s}</span>)}
+                  </div>
                 </div>
               </div>
 
-              <button
-                className="btn btn-secondary"
-                style={{ width: '100%', marginTop: 'auto' }}
-                onClick={() => alert(`${sponsor.name} ile iletişim formu yakında yayında!`)}
-              >
-                Destek Talebi Gönder
+              <button className="btn btn-primary sp-apply-btn" onClick={() => handleSponsorClick(sponsor.id)} id={`apply-btn-${sponsor.id}`}>
+                📩 Destek Talebi Gönder
               </button>
             </div>
           ))}

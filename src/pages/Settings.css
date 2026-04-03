@@ -1,0 +1,253 @@
+/* ── Settings Page ── */
+.settings-page {
+  min-height: 100vh;
+  padding: 7rem 0 4rem;
+  position: relative;
+}
+
+.settings-bg {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 50% at 80% 20%, rgba(139,92,246,0.1) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 50% at 10% 80%, rgba(99,102,241,0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.settings-container {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  margin-bottom: 2rem;
+}
+
+.settings-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-text-main);
+  margin: 0 0 0.4rem;
+}
+
+.settings-subtitle {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ── Card ── */
+.settings-card {
+  background: var(--glass-bg, rgba(255,255,255,0.04));
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+  border-radius: 20px;
+  padding: 1.75rem;
+  backdrop-filter: blur(12px);
+  margin-bottom: 1.25rem;
+}
+
+.settings-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.settings-card-header svg {
+  width: 20px;
+  height: 20px;
+  color: var(--color-primary);
+}
+
+.settings-card-header h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+/* ── Account Info ── */
+.account-info-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.account-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.account-avatar-placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.account-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-text-main);
+  margin: 0 0 0.2rem;
+}
+
+.account-email {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.account-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  background: rgba(99,102,241,0.12);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 50px;
+  font-size: 0.75rem;
+  color: #a5b4fc;
+  font-weight: 500;
+}
+
+/* ── Notifications ── */
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.notif-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 1rem;
+}
+
+.notif-item:last-child { border-bottom: none; }
+
+.notif-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+
+.notif-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
+
+.notif-desc {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+/* ── Toggle ── */
+.toggle-btn {
+  width: 48px;
+  height: 26px;
+  border-radius: 50px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.25s;
+  flex-shrink: 0;
+}
+
+.toggle-btn.active {
+  background: var(--color-primary, #6366f1);
+  border-color: var(--color-primary, #6366f1);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  transition: transform 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+
+.toggle-btn.active .toggle-thumb {
+  transform: translateX(22px);
+}
+
+/* ── Danger Zone ── */
+.danger-card {
+  border-color: rgba(252,100,100,0.15);
+}
+
+.danger-card .settings-card-header svg {
+  color: #fc6464;
+}
+
+.danger-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.logout-btn {
+  border-color: rgba(255,255,255,0.15);
+}
+
+.btn-danger {
+  background: rgba(252,100,100,0.12);
+  border: 1px solid rgba(252,100,100,0.3);
+  color: #fc6464;
+  padding: 0.65rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: rgba(252,100,100,0.2);
+  border-color: rgba(252,100,100,0.5);
+}
+
+.delete-confirm {
+  background: rgba(252,100,100,0.06);
+  border: 1px solid rgba(252,100,100,0.15);
+  border-radius: 12px;
+  padding: 1rem;
+  width: 100%;
+}
+
+.delete-warning {
+  font-size: 0.875rem;
+  color: #fc6464;
+  margin: 0 0 0.75rem;
+  font-weight: 500;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+}
