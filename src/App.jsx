@@ -17,9 +17,14 @@ import WriteBlog from './pages/WriteBlog';
 import MyContent from './pages/MyContent';
 import MyApplications from './pages/MyApplications';
 import AdminDashboard from './pages/AdminDashboard';
+import SupabaseStatus from './pages/SupabaseStatus';
 import NotFound from './pages/NotFound';
+import About from './pages/About';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfUse from './pages/TermsOfUse';
 import OnboardingModal from './components/OnboardingModal';
 import Footer from './components/Footer';
+import ChatBot from './components/ChatBot';
 import './App.css';
 
 function App() {
@@ -33,6 +38,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/supabase" element={<SupabaseStatus />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/mentors" element={<Mentors />} />
             <Route path="/mentor/:id" element={<MentorProfile />} />
@@ -59,10 +65,14 @@ function App() {
             <Route path="/settings" element={
               <ProtectedRoute><Settings /></ProtectedRoute>
             } />
+            <Route path="/about" element={<About />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfUse />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
         <Footer />
+        <ChatBot />
       </div>
       </UserProfileProvider>
     </AuthProvider>

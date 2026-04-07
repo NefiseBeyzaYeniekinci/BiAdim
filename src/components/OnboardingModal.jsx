@@ -5,12 +5,12 @@ import './OnboardingModal.css';
 
 const OnboardingModal = () => {
   const { user } = useAuth();
-  const { profile, saveProfile } = useUserProfile();
+  const { profile, loadingProfile, saveProfile } = useUserProfile();
   const [selectedRole, setSelectedRole] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // If not logged in or already has a role, do not render
-  if (!user || profile?.role) return null;
+  // Profil yüklenirken ya da zaten rol varsa modal gösterme
+  if (!user || loadingProfile || profile?.role) return null;
 
   const handleSave = () => {
     if (!selectedRole) return;

@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { MOCK_SPONSORS } from '../data/sponsors';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
+import { useUserProfile } from '../context/UserProfileContext';
 import './Sponsors.css';
 
 const typeColors = {
@@ -16,6 +14,7 @@ const typeColors = {
 
 const Sponsors = () => {
   const { user } = useAuth();
+  const { getSponsors } = useUserProfile();
   const navigate = useNavigate();
   const [filterSector, setFilterSector] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,9 +23,14 @@ const Sponsors = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setSponsorsData(MOCK_SPONSORS);
-    setLoading(false);
-  }, []);
+    const fetchAllData = async () => {
+      setLoading(true);
+      const data = await getSponsors();
+      setSponsorsData(data);
+      setLoading(false);
+    };
+    fetchAllData();
+  }, [getSponsors]);
 
   const filteredSponsors = sponsorsData.filter(s => {
     const matchName = s.name.toLowerCase().includes(searchTerm.toLowerCase());

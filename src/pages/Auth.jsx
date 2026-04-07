@@ -3,25 +3,31 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import { useUserProfile } from '../context/UserProfileContext';
 import './Auth.css';
 
 const Auth = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { saveProfile } = useUserProfile();
+
   const [isLogin, setIsLogin] = useState(true);
+  const [step, setStep] = useState(1); // 1: form, 2: rol seçimi (sadece kayıtta)
   const [googleLoading, setGoogleLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
   const [authError, setAuthError] = useState('');
-  
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [savingRole, setSavingRole] = useState(false);
+
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
 
-  // Zaten giriş yapmışsa ana sayfaya yönlendir
+  // Zaten giriş yapmışsa → rol seçimi bekliyorsa adım 2'ye, yoksa ana sayfaya
   useEffect(() => {
-    if (user) {
+    if (user && step !== 2) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, step, navigate]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -33,11 +39,15 @@ const Auth = () => {
     setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
   };
 
+  // Google ile giriş — yeni kullanıcıysa rol seçim adımına geç
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     setAuthError('');
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      // result.additionalUserInfo.isNewUser (opsiyonel ama kullanılabilir)
+      // Kolaylık için: rol yoksa OnboardingModal devreye girer zaten.
+      // Google ile girişte doğrudan /, yeni kullanıcı OnboardingModal'ı görür.
     } catch (err) {
       if (err.code === 'auth/popup-closed-by-user') setAuthError('Giriş penceresi kapatıldı.');
       else setAuthError('Google ile giriş yapılamadı.');
@@ -46,6 +56,7 @@ const Auth = () => {
     }
   };
 
+  // Email/şifre kayıt/giriş
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setEmailLoading(true);
@@ -53,13 +64,15 @@ const Auth = () => {
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        // Giriş tamam, useEffect yönlendirecek
       } else {
+        // Kayıt: kullanıcı oluştur → adım 2'ye geç (rol seçimi)
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         if (userCredential.user) {
           await updateProfile(userCredential.user, { displayName: formData.name });
-          // Force reload or just let the observer catch the new state. 
-          // Re-triggering user state visually isn't strictly necessary since user profile is fetched on reload, but we can window.location.reload() or rely on context
         }
+        // Rol seçimi adımına geç (useEffect'in yönlendirmesini engelle)
+        setStep(2);
       }
     } catch (err) {
       console.error(err);
@@ -72,6 +85,63 @@ const Auth = () => {
     }
   };
 
+  // Rol kaydet ve ana sayfaya git
+  const handleRoleSave = async () => {
+    if (!selectedRole) return;
+    setSavingRole(true);
+    await saveProfile({ role: selectedRole });
+    setSavingRole(false);
+    navigate('/');
+  };
+
+  // ── ADIM 2: Rol Seçimi ──
+  if (step === 2) {
+    return (
+      <div className="auth-page">
+        <div className="auth-bg"></div>
+        <div className="auth-container fade-in-up">
+          <div className="auth-header">
+            <h1 className="auth-title">Aramıza Hoş Geldin! 🎉</h1>
+            <p className="auth-subtitle">Platformdaki rolünü seç — bu seçim hesabına kaydedilir ve bir daha sorulmaz.</p>
+          </div>
+
+          <div className="onb-roles" style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+            <div
+              className={`onb-role-card ${selectedRole === 'mentor' ? 'active' : ''}`}
+              onClick={() => setSelectedRole('mentor')}
+              style={{ cursor: 'pointer', padding: '1.5rem 1rem', borderRadius: '16px', textAlign: 'center', border: `2px solid ${selectedRole === 'mentor' ? 'var(--color-primary)' : 'var(--color-border)'}`, background: selectedRole === 'mentor' ? 'var(--color-primary)10' : 'var(--color-surface)', transition: 'all 0.2s', marginBottom: '1rem' }}
+            >
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🎓</div>
+              <h3 style={{ marginBottom: '0.4rem' }}>Mentörüm</h3>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Deneyimlerimi paylaşıp girişimcilere yol gösterebilirim.</p>
+              {selectedRole === 'mentor' && <div style={{ color: 'var(--color-primary)', fontWeight: 700, marginTop: '0.5rem' }}>✓ Seçildi</div>}
+            </div>
+
+            <div
+              className={`onb-role-card ${selectedRole === 'girisimci' ? 'active' : ''}`}
+              onClick={() => setSelectedRole('girisimci')}
+              style={{ cursor: 'pointer', padding: '1.5rem 1rem', borderRadius: '16px', textAlign: 'center', border: `2px solid ${selectedRole === 'girisimci' ? 'var(--color-primary)' : 'var(--color-border)'}`, background: selectedRole === 'girisimci' ? 'var(--color-primary)10' : 'var(--color-surface)', transition: 'all 0.2s' }}
+            >
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🚀</div>
+              <h3 style={{ marginBottom: '0.4rem' }}>Girişimciyim</h3>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Girişimimi büyütmek için yatırımcı, sponsor ve mentör arıyorum.</p>
+              {selectedRole === 'girisimci' && <div style={{ color: 'var(--color-primary)', fontWeight: 700, marginTop: '0.5rem' }}>✓ Seçildi</div>}
+            </div>
+          </div>
+
+          <button
+            className={`btn btn-primary auth-submit`}
+            onClick={handleRoleSave}
+            disabled={!selectedRole || savingRole}
+          >
+            {savingRole ? 'Kaydediliyor...' : 'Platforma Gir →'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── ADIM 1: Giriş / Kayıt Formu ──
   return (
     <div className="auth-page">
       <div className="auth-bg"></div>
@@ -88,14 +158,14 @@ const Auth = () => {
           <button
             type="button"
             className={`auth-toggle-btn ${isLogin ? 'active' : ''}`}
-            onClick={() => setIsLogin(true)}
+            onClick={() => { setIsLogin(true); setAuthError(''); }}
           >
             Giriş Yap
           </button>
           <button
             type="button"
             className={`auth-toggle-btn ${!isLogin ? 'active' : ''}`}
-            onClick={() => setIsLogin(false)}
+            onClick={() => { setIsLogin(false); setAuthError(''); }}
           >
             Kayıt Ol
           </button>
@@ -151,7 +221,7 @@ const Auth = () => {
           </div>
 
           <button type="submit" className="btn btn-primary auth-submit fade-in-up delay-3" disabled={emailLoading}>
-            {emailLoading ? 'İşleniyor...' : (isLogin ? 'Giriş Yap' : 'Hesabımı Oluştur')}
+            {emailLoading ? 'İşleniyor...' : (isLogin ? 'Giriş Yap' : 'Devam Et →')}
           </button>
         </form>
       </div>

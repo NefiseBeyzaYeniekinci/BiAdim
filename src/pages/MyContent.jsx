@@ -12,29 +12,17 @@ const MyContent = () => {
   const navigate = useNavigate();
   const [deletedIds, setDeletedIds] = useState([]);
   const [confirmId, setConfirmId] = useState(null);
-
-  if (profile?.role !== 'mentor') {
-    return (
-      <div className="mycontent-page">
-        <div className="container mycontent-container">
-          <div className="mycontent-restricted">
-            <span>🔒</span>
-            <h2>Bu alan mentörlere özel</h2>
-            <p>İçeriklerini yönetmek için önce "Mentör" rolünü seçmen gerekiyor.</p>
-            <button className="btn btn-primary" onClick={() => navigate('/profile')}>Profili Güncelle</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Firestore'dan blog yazilarini al
   useEffect(() => {
     const fetchPosts = async () => {
-      if (!user) return;
+      if (!user) {
+        setPosts([]);
+        setLoading(false);
+        return;
+      }
       const all = await getUserBlogPosts();
       setPosts(all.filter(p => p.authorId === user.uid));
       setLoading(false);
@@ -59,6 +47,15 @@ const MyContent = () => {
   return (
     <div className="mycontent-page">
       <div className="container mycontent-container">
+        {profile?.role !== 'mentor' ? (
+          <div className="mycontent-restricted">
+            <span>🔒</span>
+            <h2>Bu alan mentörlere özel</h2>
+            <p>İçeriklerini yönetmek için önce "Mentör" rolünü seçmen gerekiyor.</p>
+            <button className="btn btn-primary" onClick={() => navigate('/profile')}>Profili Güncelle</button>
+          </div>
+        ) : (
+        <>
 
         {/* Header */}
         <div className="mycontent-header">
@@ -88,7 +85,12 @@ const MyContent = () => {
         </div>
 
         {/* Posts List */}
-        {allPosts.length === 0 ? (
+        {loading ? (
+          <div className="mycontent-empty">
+            <span>⏳</span>
+            <h3>Yükleniyor...</h3>
+          </div>
+        ) : allPosts.length === 0 ? (
           <div className="mycontent-empty">
             <span>📝</span>
             <h3>Henüz yazı yayınlamadın</h3>
@@ -133,6 +135,8 @@ const MyContent = () => {
               </div>
             ))}
           </div>
+        )}
+        </>
         )}
       </div>
     </div>

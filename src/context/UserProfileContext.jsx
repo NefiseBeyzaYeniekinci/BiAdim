@@ -1,7 +1,9 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
-import { doc, getDoc, setDoc, onSnapshot, collection, addDoc, getDocs, query, orderBy, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, collection, addDoc, getDocs, query, orderBy, updateDoc, limit } from 'firebase/firestore';
 import { db } from '../firebase';
+import { MENTORS_DATA, SEMINARS_DATA } from '../data/mentors';
+import { MOCK_SPONSORS } from '../data/sponsors';
 
 const UserProfileContext = createContext(null);
 
@@ -79,7 +81,7 @@ export const UserProfileProvider = ({ children }) => {
   const getUserBlogPosts = async () => {
     try {
       const blogsRef = collection(db, 'blogs');
-      const q = query(blogsRef, orderBy('createdAt', 'desc'));
+      const q = query(blogsRef, orderBy('createdAt', 'desc'), limit(30));
       const snapshot = await getDocs(q);
       const blogs = [];
       snapshot.forEach(doc => {
@@ -89,6 +91,51 @@ export const UserProfileProvider = ({ children }) => {
     } catch (error) {
       console.error("Bloglar çekilemedi:", error);
       return [];
+    }
+  };
+
+  // Tüm mentörleri getir (Asenkron) — Firestore boşsa mock data döner
+  const getMentors = async () => {
+    try {
+      const mentorsRef = collection(db, 'mentors');
+      const q = query(mentorsRef, limit(50));
+      const snapshot = await getDocs(q);
+      const mentors = [];
+      snapshot.forEach(doc => mentors.push({ id: doc.id, ...doc.data() }));
+      return mentors.length > 0 ? mentors : MENTORS_DATA;
+    } catch (error) {
+      console.warn("Mentörler Firestore'dan alınamadı, mock data kullanılıyor:", error.message);
+      return MENTORS_DATA;
+    }
+  };
+
+  // Tüm sponsorları getir (Asenkron) — Firestore boşsa mock data döner
+  const getSponsors = async () => {
+    try {
+      const sponsorsRef = collection(db, 'sponsors');
+      const q = query(sponsorsRef, limit(50));
+      const snapshot = await getDocs(q);
+      const sponsors = [];
+      snapshot.forEach(doc => sponsors.push({ id: doc.id, ...doc.data() }));
+      return sponsors.length > 0 ? sponsors : MOCK_SPONSORS;
+    } catch (error) {
+      console.warn("Sponsorlar Firestore'dan alınamadı, mock data kullanılıyor:", error.message);
+      return MOCK_SPONSORS;
+    }
+  };
+
+  // Tüm seminerleri getir (Asenkron) — Firestore boşsa mock data döner
+  const getSeminars = async () => {
+    try {
+      const seminarsRef = collection(db, 'seminars');
+      const q = query(seminarsRef, limit(50));
+      const snapshot = await getDocs(q);
+      const seminars = [];
+      snapshot.forEach(doc => seminars.push({ id: doc.id, ...doc.data() }));
+      return seminars.length > 0 ? seminars : SEMINARS_DATA;
+    } catch (error) {
+      console.warn("Seminerler Firestore'dan alınamadı, mock data kullanılıyor:", error.message);
+      return SEMINARS_DATA;
     }
   };
 
@@ -132,6 +179,9 @@ export const UserProfileProvider = ({ children }) => {
       saveProfile,
       saveBlogPost,
       getUserBlogPosts,
+      getMentors,
+      getSponsors,
+      getSeminars,
       guidedByMentor,
       getMentorScore,
     }}>

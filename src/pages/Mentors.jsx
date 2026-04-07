@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserProfile } from '../context/UserProfileContext';
-import { MENTORS_DATA } from '../data/mentors.js';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
 import './Mentors.css';
 
 /* ── Score Bar ── */
@@ -26,7 +23,7 @@ const Stars = ({ rating }) => (
 const EXPERTISE_CATEGORIES = ['Yazılım', 'Pazarlama', 'Finans', 'UX/UI', 'Hukuk', 'Teknoloji', 'Sistem Mimarisi', 'Büyüme', 'Yatırım Ağı', 'İnsan Kaynakları'];
 
 const Mentors = () => {
-  const { getMentorScore } = useUserProfile();
+  const { getMentors } = useUserProfile();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,9 +32,14 @@ const Mentors = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setMentorsData(MENTORS_DATA);
-    setLoading(false);
-  }, []);
+    const fetchAllData = async () => {
+      setLoading(true);
+      const data = await getMentors();
+      setMentorsData(data);
+      setLoading(false);
+    };
+    fetchAllData();
+  }, [getMentors]);
 
   const mentorsWithScore = mentorsData.map(m => ({
     ...m,

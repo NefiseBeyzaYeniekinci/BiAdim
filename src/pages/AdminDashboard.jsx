@@ -19,7 +19,7 @@ const MOCK_STATS = {
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const { fetchBlogs } = useUserProfile();
+  const { getUserBlogPosts } = useUserProfile();
   
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -28,6 +28,7 @@ const AdminDashboard = () => {
   const [allBlogs, setAllBlogs] = useState([]);
   const [isSeeding, setIsSeeding] = useState(false);
   const [seedMessage, setSeedMessage] = useState('');
+  const [weeklyIncrease] = useState(() => Math.floor(Math.random() * 10));
 
   useEffect(() => {
     if (localStorage.getItem('admin_session') === 'active') {
@@ -36,10 +37,11 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && activeTab === 'dashboard' || activeTab === 'blogs') {
-      fetchBlogs().then(setAllBlogs).catch(console.error);
+    if (!isAuthenticated) return;
+    if (activeTab === 'dashboard' || activeTab === 'blogs') {
+      getUserBlogPosts().then(setAllBlogs).catch(console.error);
     }
-  }, [isAuthenticated, activeTab]);
+  }, [isAuthenticated, activeTab, getUserBlogPosts]);
 
   const handleSeedDatabase = async () => {
     if(!window.confirm("Tüm statik veriler Firestore'a kopyalanacak. Onaylıyor musunuz?")) return;
@@ -152,7 +154,7 @@ const AdminDashboard = () => {
               <div className="admin-stat-card">
                 <h3>👥 Toplam Kullanıcı</h3>
                 <div className="stat-val">{MOCK_STATS.totalUsers}</div>
-                <div className="stat-sub">+{Math.floor(Math.random() * 10)} bu hafta</div>
+                <div className="stat-sub">+{weeklyIncrease} bu hafta</div>
               </div>
               <div className="admin-stat-card">
                 <h3>🎓 Mentör Sayısı</h3>

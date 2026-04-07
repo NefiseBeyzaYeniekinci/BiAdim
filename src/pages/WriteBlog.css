@@ -36,6 +36,23 @@
 .wb-publish-btn { white-space: nowrap; }
 .wb-publish-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
+/* Publish Error Banner */
+.wb-error-banner {
+  display: flex; align-items: center; gap: 0.75rem;
+  background: #FEF2F2; border: 1.5px solid #FCA5A5;
+  border-radius: 12px; padding: 0.875rem 1.25rem;
+  margin-bottom: 1rem; font-size: 0.88rem; color: #991B1B;
+  animation: slideDown 0.3s ease;
+}
+.wb-error-banner span:first-child { font-size: 1.1rem; flex-shrink: 0; }
+.wb-error-banner span:nth-child(2) { flex: 1; font-weight: 500; }
+.wb-error-close {
+  background: none; border: none; color: #EF4444;
+  font-size: 1rem; cursor: pointer; padding: 0.1rem 0.3rem;
+  border-radius: 4px; flex-shrink: 0; transition: background 0.2s;
+}
+.wb-error-close:hover { background: #FEE2E2; }
+
 /* ── Layout ── */
 .writeblog-layout {
   display: grid;
@@ -146,7 +163,10 @@
 .wb-url-input:focus { border-color: var(--color-primary); background: white; }
 
 /* Tags */
-.wb-tags-grid { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.wb-tags-grid { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.75rem; }
+
+.wb-tag-wrap { position: relative; display: inline-flex; align-items: center; }
+
 .wb-tag-btn {
   padding: 0.28rem 0.7rem; border-radius: 50px; border: 1.5px solid #E2E8F0;
   background: #F8FAFC; color: var(--color-text-muted); font-size: 0.75rem; font-weight: 500;
@@ -154,6 +174,89 @@
 }
 .wb-tag-btn:hover { border-color: var(--color-secondary); color: var(--color-secondary); }
 .wb-tag-btn.active { background: var(--color-secondary); border-color: var(--color-secondary); color: white; }
+
+/* Remove button on custom tags */
+.wb-tag-remove {
+  position: absolute; top: -5px; right: -5px;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: #EF4444; border: none; color: white;
+  font-size: 0.65rem; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; line-height: 1; opacity: 0; transition: opacity 0.2s;
+}
+.wb-tag-wrap:hover .wb-tag-remove { opacity: 1; }
+
+/* Custom tag input row */
+.wb-custom-tag-row {
+  display: flex; gap: 0.4rem; margin-top: 0.25rem;
+}
+.wb-custom-tag-input {
+  flex: 1; padding: 0.45rem 0.75rem;
+  border: 1.5px solid #E2E8F0; border-radius: 8px;
+  background: #F8FAFC; font-size: 0.8rem; font-family: inherit;
+  color: var(--color-text-main); outline: none; transition: border-color 0.2s;
+}
+.wb-custom-tag-input:focus { border-color: var(--color-secondary); background: white; }
+.wb-custom-tag-input::placeholder { color: #CBD5E0; }
+
+.wb-custom-tag-add {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  background: var(--color-secondary); border: none; color: white;
+  font-size: 1.1rem; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.wb-custom-tag-add:hover:not(:disabled) { background: #3a7bc8; transform: scale(1.05); }
+.wb-custom-tag-add:disabled { background: #CBD5E0; cursor: not-allowed; }
+
+.wb-tag-hint { font-size: 0.7rem; color: var(--color-text-light); margin: 0.35rem 0 0; }
+.wb-tag-error { font-size: 0.73rem; color: #EF4444; font-weight: 500; margin: 0.35rem 0 0; }
+
+/* Draft Banner */
+.wb-draft-banner {
+  display: flex; align-items: center; gap: 0.875rem; flex-wrap: wrap;
+  background: linear-gradient(135deg, #ECFDF5, #D1FAE5);
+  border: 1.5px solid #6EE7B7; border-radius: 14px;
+  padding: 0.875rem 1.25rem; margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+  animation: slideDown 0.3s ease;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.wb-draft-icon { font-size: 1.25rem; flex-shrink: 0; }
+.wb-draft-banner span:not(.wb-draft-icon) {
+  font-size: 0.88rem; color: #065F46; flex: 1;
+}
+.wb-draft-banner strong { font-weight: 700; }
+.wb-draft-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+.wb-draft-dismiss {
+  padding: 0.35rem 0.85rem; border-radius: 8px;
+  background: #10B981; border: none; color: white;
+  font-size: 0.78rem; font-weight: 700; cursor: pointer;
+  transition: background 0.2s;
+}
+.wb-draft-dismiss:hover { background: #059669; }
+.wb-draft-discard {
+  padding: 0.35rem 0.85rem; border-radius: 8px;
+  background: white; border: 1.5px solid #6EE7B7; color: #065F46;
+  font-size: 0.78rem; font-weight: 600; cursor: pointer;
+  transition: all 0.2s;
+}
+.wb-draft-discard:hover { background: #FEF2F2; border-color: #FCA5A5; color: #B91C1C; }
+
+/* Live draft badge in topbar */
+.wb-draft-live-badge {
+  font-size: 0.72rem; color: #059669; font-weight: 600;
+  background: #ECFDF5; border: 1px solid #A7F3D0;
+  border-radius: 50px; padding: 0.15rem 0.6rem;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
 
 /* Author card */  
 .wb-author-card { display: flex; align-items: center; gap: 0.75rem; }

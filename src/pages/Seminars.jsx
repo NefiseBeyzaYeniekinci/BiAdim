@@ -1,11 +1,25 @@
-import { SEMINARS_DATA } from '../data/mentors.js';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useUserProfile } from '../context/UserProfileContext';
 import './Seminars.css';
 
 const Seminars = () => {
   const { user } = useAuth();
+  const { getSeminars } = useUserProfile();
   const navigate = useNavigate();
+  const [seminarsData, setSeminarsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      const data = await getSeminars();
+      setSeminarsData(data);
+      setLoading(false);
+    };
+    fetchAllData();
+  }, [getSeminars]);
 
   const handleRegister = (seminar) => {
     if (!user) {
@@ -29,7 +43,11 @@ const Seminars = () => {
         </div>
 
         <div className="seminars-grid">
-          {SEMINARS_DATA.sort((a, b) => a.status === 'active' ? -1 : 1).map((seminar, idx) => {
+          {loading ? (
+             <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '3rem' }}>Yükleniyor...</div>
+          ) : seminarsData.length === 0 ? (
+             <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '3rem', color: 'var(--color-text-muted)' }}>Henüz aktif seminer bulunmamaktadır.</div>
+          ) : seminarsData.sort((a) => a.status === 'active' ? -1 : 1).map((seminar, idx) => {
             const statusMap = {
               active: { label: '🔴 CANLI', cls: 'status-live' },
               upcoming: { label: '🟡 Yaklaşan', cls: 'status-upcoming' },

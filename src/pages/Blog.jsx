@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { useUserProfile } from '../context/UserProfileContext';
 import { newsData, categories } from '../data/news.js';
 import './Blog.css';
 
 const Blog = () => {
-  const { user } = useAuth();
   const { profile, getUserBlogPosts } = useUserProfile();
   const [activeCategory, setActiveCategory] = useState('Tümü');
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,7 +21,7 @@ const Blog = () => {
       console.error(e);
       setUserPosts([]);
     });
-  }, []);
+  }, [getUserBlogPosts]);
 
   // Kullanıcı yazıları + statik haberler
   const allNews = [

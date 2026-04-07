@@ -21,7 +21,8 @@ const Profile = () => {
 
   useEffect(() => {
     if (profile) {
-      setSelectedRole(profile.role || null);
+      const nextRole = profile.role || null;
+      setSelectedRole((prev) => (prev === nextRole ? prev : nextRole));
       setForm(prev => ({ ...prev, ...profile }));
     }
   }, [profile]);

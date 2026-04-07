@@ -28,10 +28,10 @@ const Footer = () => {
 
         <div className="footer-links-group fade-in-up delay-2">
           <h4>Kurumsal</h4>
-          <Link to="#">Hakkımızda</Link>
+          <Link to="/about">Hakkımızda</Link>
           <Link to="#">İletişim</Link>
-          <Link to="#">Gizlilik Politikası</Link>
-          <Link to="#">Kullanım Koşulları</Link>
+          <Link to="/privacy">Gizlilik Politikası</Link>
+          <Link to="/terms">Kullanım Koşulları</Link>
         </div>
 
       </div>
